@@ -41,6 +41,7 @@ import {
 } from "recharts";
 
 import "./App.css";
+import * as XLSX from "xlsx";
 
 const initialGrades = [
   "6º ano A",
@@ -953,72 +954,35 @@ function App() {
   }
 
   function exportStudentsCSV() {
-    const headers = [
-      "Nome",
-      "SIGE",
-      "Censo",
-      "Nome do pai",
-      "Nome da mãe",
-      "Nome do responsável",
-      "Telefone dos pais",
-      "CPF",
-      "RG",
-      "Cor/Raça",
-      "Nascimento",
-      "SUS",
-      "Transporte",
-      "Tipo de transporte",
-      "Situação vacinal",
-      "Vacina pendente",
-      "Histórico escolar",
-      "Sexo",
-      "Série",
-      "Arquivado",
-      "Ano letivo",
-    ];
+    const rows = students.map((s) => ({
+      Nome: s.nome || "",
+      SIGE: s.sige || "",
+      Censo: s.censo || "",
+      "Nome do pai": s.nomePai || "",
+      "Nome da mãe": s.nomeMae || "",
+      "Nome do responsável": s.nomeResponsavel || "",
+      "Telefone dos pais": s.telefonePais || "",
+      CPF: String(s.cpf || ""),
+      RG: String(s.rg || ""),
+      "Cor/Raça": s.corRaca || "",
+      Nascimento: s.nascimento ? formatarData(s.nascimento) : "",
+      SUS: String(s.sus || ""),
+      Transporte: s.transporte ? "Sim" : "Não",
+      "Tipo de transporte": s.transporteTipo || "",
+      "Situação vacinal": s.situacaoVacina === "nao" ? "Não" : "Sim",
+      "Vacina pendente": s.faltaVacina || "",
+      "Histórico escolar": s.historicoEscolar === "sim" ? "Sim" : "Não",
+      Sexo: s.sexo || "",
+      Série: s.serie || "",
+      Arquivado: s.archived ? "Sim" : "Não",
+      "Ano letivo": s.anoLetivo || "",
+    }));
 
-    const rows = students.map((s) => [
-      s.nome || "",
-      s.sige || "",
-      s.censo || "",
-      s.nomePai || "",
-      s.nomeMae || "",
-      s.nomeResponsavel || "",
-      s.telefonePais || "",
-      s.cpf || "",
-      s.rg || "",
-      s.corRaca || "",
-      s.nascimento || "",
-      s.sus || "",
-      s.transporte ? "Sim" : "Não",
-      s.transporteTipo || "",
-      s.situacaoVacina === "nao" ? "Não" : "Sim",
-      s.faltaVacina || "",
-      s.historicoEscolar === "sim" ? "Sim" : "Não",
-      s.sexo || "",
-      s.serie || "",
-      s.archived ? "Sim" : "Não",
-      s.anoLetivo || "",
-    ]);
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
 
-    const csvContent = [headers, ...rows]
-      .map((row) =>
-        row
-          .map((value) => `"${String(value || "").replace(/"/g, '""')}"`)
-          .join(";"),
-      )
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-
-    link.href = url;
-    link.download = "alunos.csv";
-    link.click();
-
-    URL.revokeObjectURL(url);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Alunos");
+    XLSX.writeFile(workbook, "alunos.xlsx");
   }
 
   function exportFilteredStudentsCSV() {
@@ -1027,80 +991,41 @@ function App() {
       return;
     }
 
-    const headers = [
-      "Nome",
-      "SIGE",
-      "Censo",
-      "Nome do pai",
-      "Nome da mãe",
-      "Nome do responsável",
-      "Telefone dos pais",
-      "CPF",
-      "RG",
-      "Cor/Raça",
-      "Nascimento",
-      "SUS",
-      "Transporte",
-      "Tipo de transporte",
-      "Vacina declarada",
-      "Vacina pendente",
-      "Histórico escolar",
-      "Sexo",
-      "Série",
-      "Arquivado",
-      "Ano letivo",
-    ];
+    const rows = displayedStudents.map((s) => ({
+      Nome: s.nome || "",
+      SIGE: s.sige || "",
+      Censo: s.censo || "",
+      "Nome do pai": s.nomePai || "",
+      "Nome da mãe": s.nomeMae || "",
+      "Nome do responsável": s.nomeResponsavel || "",
+      "Telefone dos pais": s.telefonePais || "",
+      CPF: String(s.cpf || ""),
+      RG: String(s.rg || ""),
+      "Cor/Raça": s.corRaca || "",
+      Nascimento: s.nascimento ? formatarData(s.nascimento) : "",
+      SUS: String(s.sus || ""),
+      Transporte: s.transporte ? "Sim" : "Não",
+      "Tipo de transporte": s.transporteTipo || "",
+      "Vacina declarada": s.situacaoVacina === "nao" ? "Não" : "Sim",
+      "Vacina pendente": s.faltaVacina || "",
+      "Histórico escolar": s.historicoEscolar === "sim" ? "Sim" : "Não",
+      Sexo: s.sexo || "",
+      Série: s.serie || "",
+      Arquivado: s.archived ? "Sim" : "Não",
+      "Ano letivo": s.anoLetivo || "",
+    }));
 
-    const rows = displayedStudents.map((s) => [
-      s.nome || "",
-      s.sige || "",
-      s.censo || "",
-      s.nomePai || "",
-      s.nomeMae || "",
-      s.nomeResponsavel || "",
-      s.telefonePais || "",
-      s.cpf || "",
-      s.rg || "",
-      s.corRaca || "",
-      s.nascimento || "",
-      s.sus || "",
-      s.transporte ? "Sim" : "Não",
-      s.transporteTipo || "",
-      s.situacaoVacina === "nao" ? "Não" : "Sim",
-      s.faltaVacina || "",
-      s.historicoEscolar === "sim" ? "Sim" : "Não",
-      s.sexo || "",
-      s.serie || "",
-      s.archived ? "Sim" : "Não",
-      s.anoLetivo || "",
-    ]);
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
 
-    const csvContent = [headers, ...rows]
-      .map((row) =>
-        row
-          .map((value) => `"${String(value || "").replace(/"/g, '""')}"`)
-          .join(";"),
-      )
-      .join("\n");
-
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-
-    link.href = url;
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Alunos");
 
     const fileName =
       serieFiltro !== "Todas"
-        ? `alunos_${serieFiltro.replace(/\s+/g, "_")}.csv`
-        : "alunos_filtrados.csv";
+        ? `alunos_${serieFiltro.replace(/\s+/g, "_")}.xlsx`
+        : "alunos_filtrados.xlsx";
 
-    link.download = fileName;
-    link.click();
-
-    URL.revokeObjectURL(url);
+    XLSX.writeFile(workbook, fileName);
   }
 
   async function handleAddGrade() {
@@ -2042,16 +1967,16 @@ function App() {
                       <span className="gender-summary boys">
                         Meninos:{" "}
                         {stats.total > 0
-                          ? ((stats.meninos / stats.total) * 100).toFixed(1)
-                          : "0.0"}
+                          ? Math.round((stats.meninos / stats.total) * 100)
+                          : 0}
                         %
                       </span>
 
                       <span className="gender-summary girls">
                         Meninas:{" "}
                         {stats.total > 0
-                          ? ((stats.meninas / stats.total) * 100).toFixed(1)
-                          : "0.0"}
+                          ? Math.round((stats.meninas / stats.total) * 100)
+                          : 0}
                         %
                       </span>
                     </div>
@@ -2199,7 +2124,7 @@ function App() {
 
                 <div className="filters-actions">
                   <button className="secondary-btn" onClick={exportStudentsCSV}>
-                    Exportar todos
+                    Exportar todos (.xlsx)
                   </button>
 
                   {serieFiltro !== "Todas" && (
@@ -2207,7 +2132,7 @@ function App() {
                       className="secondary-btn"
                       onClick={exportFilteredStudentsCSV}
                     >
-                      Exportar série
+                      Exportar série (.xlsx)
                     </button>
                   )}
                 </div>
